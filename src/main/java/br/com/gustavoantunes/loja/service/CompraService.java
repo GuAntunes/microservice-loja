@@ -12,12 +12,16 @@ import br.com.gustavoantunes.loja.controller.dto.CompraDTO;
 import br.com.gustavoantunes.loja.controller.dto.InfoFornecedorDTO;
 import br.com.gustavoantunes.loja.controller.dto.InfoPedidoDTO;
 import br.com.gustavoantunes.loja.model.Compra;
+import br.com.gustavoantunes.loja.repository.CompraRepository;
 
 @Service
 public class CompraService {
 //
 //	@Autowired
 //	private RestTemplate client;
+	
+	@Autowired
+	private CompraRepository CompraRepository;
 
 	@Autowired
 	private static final Logger LOG = LoggerFactory.getLogger(CompraService.class);
@@ -25,7 +29,7 @@ public class CompraService {
 	@Autowired
 	private FornecedorClient fornecedorClient;
 
-	@HystrixCommand(fallbackMethod = "realizaCompraFallback")
+	@HystrixCommand(fallbackMethod = "realizaCompraFallback", threadPoolKey = "realizaCompraThreadPool")
 	public Compra realizaCompra(CompraDTO compra) {
 
 //		ResponseEntity<InfoFornecedorDTO> exchange = client.exchange(
@@ -46,12 +50,9 @@ public class CompraService {
 		compraSalva.setPedidoId(pedido.getId());
 		compraSalva.setTempoDePreparo(pedido.getTempoDePreparo());
 		compraSalva.setEnderecoDestino(compra.getEndereco().toString());
-		try {
-			Thread.sleep(2000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		
+		CompraRepository.save(compraSalva);
+		
 		return compraSalva;
 	}
 
@@ -59,6 +60,11 @@ public class CompraService {
 		Compra compraFallBack = new Compra();
 		compraFallBack.setEnderecoDestino(compra.getEndereco().toString());
 		return compraFallBack;
+	}
+
+	@HystrixCommand(threadPoolKey = "getByIdThreadPool")
+	public Compra getById(Long id) {
+		return CompraRepository.findById(id).orElse(new Compra());
 	}
 
 }
