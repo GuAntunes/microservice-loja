@@ -21,7 +21,7 @@ public class CompraController {
 	
 	@PostMapping
 	public Compra realizaCompra(@RequestBody  CompraDTO compra) {
-		return compraService.realizaCompra(compra);
+ 		return compraService.realizaCompra(compra);
 	}
 	
 	@GetMapping("/{id}")
